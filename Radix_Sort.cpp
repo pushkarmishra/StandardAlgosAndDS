@@ -9,61 +9,83 @@
 #include <string>
 #include <cstring>
 #include <queue>
+#include <cassert>
 #define rf freopen("in.in", "r", stdin)
 #define wf freopen("out.out", "w", stdout)
 #define rep(i, s, n) for(int i=int(s); i<=int(n); ++i)
 using namespace std;
 const int mx = 1e5 + 10, mod = 1e9+7;
 
-int bucket[10];
-int aux_arr[mx];
-int a[mx];
-int p_10 = 1;
+void radixSortHelper(int arr[], int n, int* aux_arr) {
+	int pow10 = 1;
+	int sorter[10];
 
-void sort_by_digit(int a[], int n)
-{
-	memset(bucket, 0, sizeof bucket);
+	do {
+		memset(sorter, 0, sizeof(sorter));
+	    
+	    for (int i = 0; i < n; i += 1) {
+	        int num = abs(arr[i]) / pow10;
+	        num = num - ((num / 10) * 10);
+	        
+	        sorter[num] += 1;
+	    }
+	    
+	    for (int i = 1; i < 10; i += 1) {
+	        sorter[i] += sorter[i-1];
+	    }
+	    
+	    for (int i = n - 1; i >= 0; i -= 1) {
+	        int num = abs(arr[i]) / pow10;
+	        num = num - ((num / 10) * 10);
+	        
+	        aux_arr[sorter[num] - 1] = arr[i];
+	        sorter[num] -= 1;
+	    }
+	    
+	    memcpy(arr, aux_arr, sizeof(int) * n);
+	    pow10 *= 10;
 
-	rep(i, 1, n)
-	{
-		int num = a[i]/p_10;
-		bucket[num%10]++;
-	}
+	} while (pow10 <= 1e9);
+}
 
-	rep(i, 1, 9)
-		bucket[i] += bucket[i-1];
+void radixSort(int arr[], int n) {
+	int *aux_arr = new int[n];
+	radixSortHelper(arr, n, aux_arr);
 
-	for(int i = n; i; --i)
-	{
-		int num = a[i]/p_10;
-		int idx = bucket[num%10];
-
-		aux_arr[idx] = a[i];
-		bucket[num%10]--;
-	}
-	
-	memcpy(a, aux_arr, sizeof aux_arr);
-	p_10 *= 10;
+	int idx = 0;
+	for (int i = n - 1; i >= 0; i -= 1) {
+        if (aux_arr[i] < 0) {
+            arr[idx] = aux_arr[i];
+            idx += 1;
+        }
+    }
+    
+    for (int i = 0; i < n; i += 1) {
+        if (aux_arr[i] >= 0) {
+            arr[idx] = aux_arr[i];
+            idx += 1;
+        }
+    }
 }
 
 int main()
 {
-	rf;// wf;
+	// rf;// wf;
 	ios::sync_with_stdio(0);
 
 	int n;
 	cin >> n;
 
-	rep(i, 1, n)
+	int a[n];
+	for (int i = 0; i < n; i += 1) {
 		cin >> a[i];
+	}
+	radixSort(a, n);
 
-	rep(i, 1, 10)
-		sort_by_digit(a, n);
-
-	rep(i, 1, n)
+	for (int i = 0; i < n; i += 1) {
 		cout << a[i] << ' ';
+	}
 	cout << endl;
 
 	return 0;
 }
-
